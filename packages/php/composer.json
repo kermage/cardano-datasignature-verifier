@@ -1,0 +1,22 @@
+{
+  "name": "kermage/cardano-datasignature-verifier",
+  "authors": [
+    {
+      "name": "Gene Alyson Fortunado Torcende",
+      "email": "genealyson.torcende@gmail.com"
+    }
+  ],
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  },
+  "require": {
+    "php": "^8.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "CardanoDataSignature\\": "src/"
+    }
+  }
+
+}
