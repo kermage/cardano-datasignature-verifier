@@ -7,6 +7,7 @@
 namespace CardanoDataSignature;
 
 use CBOR\CBOREncoder;
+use CBOR\Types\CBORByteString;
 
 class Verifier
 {
@@ -68,10 +69,15 @@ class Verifier
 	{
 		$cborSignature = hex2bin($this->signature);
 		$signatureData = CBOREncoder::decode($cborSignature);
+
+		if (!$this->isCoseSign1($signatureData)) {
+			return false;
+		}
+
 		$protectedHeader = $signatureData[0]->get_byte_string();
 		$decodedProtectedHeader = CBOREncoder::decode($protectedHeader);
 
-		if ($decodedProtectedHeader[1] !== -8) {
+		if (!$this->handledHeader($decodedProtectedHeader)) {
 			return false;
 		}
 
@@ -84,7 +90,15 @@ class Verifier
 		$cborKey = hex2bin($this->key);
 		$keyData = CBOREncoder::decode($cborKey);
 
-		if ($keyData[1] !== 1 || $keyData[-1] !== 6) {
+		if (!$this->validKeyPair($keyData)) {
+			return false;
+		}
+
+		$protectedAddress = $decodedProtectedHeader['address']->get_byte_string();
+		$publicKey = $keyData[-2]->get_byte_string();
+		$credentialHash = sodium_crypto_generichash($publicKey, '', 28);
+
+		if (!str_ends_with(bin2hex($protectedAddress), bin2hex($credentialHash))) {
 			return false;
 		}
 
@@ -101,7 +115,82 @@ class Verifier
 		// return sodium_crypto_sign_verify_detached(
 		// 	$signatureData[3]->get_byte_string(),
 		// 	CBOREncoder::encode($sigStructure),
-		// 	$keyData[-2]->get_byte_string()
+		// 	$publicKey
 		// );
 	}
-}
+
+	protected function isCoseSign1(mixed $data): bool
+	{
+		if (!is_array($data) || 4 !== count($data)) {
+			return false;
+		}
+
+		if (empty($data[0]) || empty($data[1]) || empty($data[2]) || empty($data[3])) {
+			return false;
+		}
+
+		if (
+			'object' !== gettype($data[0]) ||
+			'array' !== gettype($data[1]) ||
+			'object' !== gettype($data[2]) ||
+			'object' !== gettype($data[3])
+		) {
+			return false;
+		}
+
+		if (
+			CBORByteString::class !== get_class($data[0]) ||
+			!isset($data[1]['hashed']) ||
+			CBORByteString::class !== get_class($data[2]) ||
+			CBORByteString::class !== get_class($data[3])
+		) {
+			return false;
+		}
+
+		return true;
+	}
+
+	protected function handledHeader(mixed $value): bool
+	{
+		if (!is_array($value) || 2 !== count($value)) {
+			return false;
+		}
+
+		if (empty($value[1] || empty($value['address']))) {
+			return false;
+		}
+
+		if (
+			-8 !== $value[1] ||
+			'object' !== gettype($value['address']) ||
+			CBORByteString::class !== get_class($value['address'])
+		) {
+			return false;
+		}
+
+		return true;
+	}
+
+	protected function validKeyPair(mixed $data): bool
+	{
+		if (!is_array($data) || 4 !== count($data)) {
+			return false;
+		}
+
+		if (empty($data[1]) || empty($data[3]) || empty($data[-1]) || empty($data[-2])) {
+			return false;
+		}
+
+		if (
+			1 !== $data[1] ||
+			-8 !== $data[3] ||
+			6 !== $data[-1] ||
+			'object' !== gettype($data[-2]) ||
+			CBORByteString::class !== get_class($data[-2])
+		) {
+			return false;
+		}
+
+		return true;
+	}
+	}
