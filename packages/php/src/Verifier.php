@@ -6,6 +6,8 @@
 
 namespace CardanoDataSignature;
 
+use CBOR\CBOREncoder;
+
 class Verifier
 {
 	public function __construct(protected string $signature, protected string $key) {}
@@ -22,7 +24,12 @@ class Verifier
 			return false;
 		}
 
-		return $verifier->hasExpected($message);
+		if (!$verifier->hasExpected($message)) {
+			return false;
+		}
+
+		return $verifier->correctCBOR($message);
+
 	}
 
 	protected function isAddress(string $value): bool
@@ -55,5 +62,46 @@ class Verifier
 		}
 
 		return true;
+	}
+
+	protected function correctCBOR(string $message): bool
+	{
+		$cborSignature = hex2bin($this->signature);
+		$signatureData = CBOREncoder::decode($cborSignature);
+		$protectedHeader = $signatureData[0]->get_byte_string();
+		$decodedProtectedHeader = CBOREncoder::decode($protectedHeader);
+
+		if ($decodedProtectedHeader[1] !== -8) {
+			return false;
+		}
+
+		$payload = $signatureData[2]->get_byte_string();
+
+		if ($payload !== $message) {
+			return false;
+		}
+
+		$cborKey = hex2bin($this->key);
+		$keyData = CBOREncoder::decode($cborKey);
+
+		if ($keyData[1] !== 1 || $keyData[-1] !== 6) {
+			return false;
+		}
+
+		return true;
+
+		// TODO: actual verification
+		// $sigStructure = [
+		// 	'Signature1',
+		// 	$protectedHeader,
+		// 	'',
+		// 	$payload,
+		// ];
+
+		// return sodium_crypto_sign_verify_detached(
+		// 	$signatureData[3]->get_byte_string(),
+		// 	CBOREncoder::encode($sigStructure),
+		// 	$keyData[-2]->get_byte_string()
+		// );
 	}
 }
