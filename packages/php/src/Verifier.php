@@ -98,7 +98,7 @@ class Verifier
 		$publicKey = $keyData[-2]->get_byte_string();
 		$credentialHash = sodium_crypto_generichash($publicKey, '', 28);
 
-		if (!str_ends_with(bin2hex($protectedAddress), bin2hex($credentialHash))) {
+		if (false === strpos(bin2hex($protectedAddress), bin2hex($credentialHash))) {
 			return false;
 		}
 

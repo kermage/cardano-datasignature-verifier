@@ -20,4 +20,14 @@ class VerifierTest extends TestCase
 
 		$this->assertTrue(Verifier::verify($signature, $key, $message, $address));
 	}
+
+	public function testVerify2()
+	{
+		$signature = '845846a201276761646472657373583900839f2b84c766291d7ae24649529a73b05f32acf4b76f71e0ac6ffaa5ce77e7c1ae5caa5c8b525d8d457e5635b84969d48785b1072a10b910a166686173686564f456412074657374206d6573736167652066726f6d204a535840c236a5008fe4c5207b2567ed57b6d784716f61f7b0f8a6d72a01306497bbdf0142d0be941db2f31d18ac34021323f239f481373bd54e1b49c12d8f231c165008';
+		$key = 'a401010327200621582062ed9a163e31c41523248928b311800a50cf93b26fc4bf31993e0acc508f6cb0';
+		$message = 'A test message from JS';
+		$address = 'addr_test1qzpe72uycanzj8t6ufryj556wwc97v4v7jmk7u0q43hl4fwwwlnurtju4fwgk5ja34zhu434hpykn4y8skcsw2sshygqwfe2qk';
+
+		$this->assertTrue(Verifier::verify($signature, $key, $message, $address));
+	}
 }
