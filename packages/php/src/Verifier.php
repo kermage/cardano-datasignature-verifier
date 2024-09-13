@@ -102,21 +102,18 @@ class Verifier
 			return false;
 		}
 
-		return true;
+		$sigStructure = [
+			'Signature1',
+			$signatureData[0],
+			new CBORByteString(''),
+			$signatureData[2]
+		];
 
-		// TODO: actual verification
-		// $sigStructure = [
-		// 	'Signature1',
-		// 	$protectedHeader,
-		// 	'',
-		// 	$payload,
-		// ];
-
-		// return sodium_crypto_sign_verify_detached(
-		// 	$signatureData[3]->get_byte_string(),
-		// 	CBOREncoder::encode($sigStructure),
-		// 	$publicKey
-		// );
+		return sodium_crypto_sign_verify_detached(
+			$signatureData[3]->get_byte_string(),
+			CBOREncoder::encode($sigStructure),
+			$publicKey
+		);
 	}
 
 	protected function isCoseSign1(mixed $data): bool
