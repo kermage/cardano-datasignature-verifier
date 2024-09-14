@@ -190,4 +190,4 @@ class Verifier
 
 		return true;
 	}
-	}
+}
