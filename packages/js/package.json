@@ -1,0 +1,20 @@
+{
+  "name": "cardano-datasignature-verifier",
+  "version": "0.0.0",
+  "author": {
+    "name": "Gene Alyson Fortunado Torcende",
+    "email": "genealyson.torcende@gmail.com"
+  },
+  "main": "dist/index.js",
+  "dependencies": {
+    "@cardano-foundation/cardano-verify-datasignature": "^1.0.11",
+    "text-encoding": "^0.7.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.5"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  }
+}
