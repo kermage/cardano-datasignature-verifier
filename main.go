@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"log"
 	"os"
 
@@ -8,17 +9,28 @@ import (
 	"github.com/dop251/goja_nodejs/require"
 )
 
+//go:embed packages/js/dist/index.js
+var indexJS string
+
 func main() {
-	const SCRIPT = `
-	const module = require('./packages/js/dist/index.js');
+	SCRIPT := `
+	(function(require, module, exports) {
+		` + indexJS + `
+	})(require, module, module.exports);
+
 	function main(args) {
-		return module.main(args);
+		return module.exports.main(args);
 	}
 	`
 
 	vm := goja.New()
+	module := vm.NewObject()
+	exports := vm.NewObject()
 
 	new(require.Registry).Enable(vm)
+	module.Set("exports", exports)
+	vm.Set("module", module)
+	vm.Set("exports", exports)
 	vm.RunProgram(goja.MustCompile("index.js", SCRIPT, true))
 
 	var main func([]string) bool
