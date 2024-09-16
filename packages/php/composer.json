@@ -12,6 +12,7 @@
   },
   "require": {
     "php": "^8.2",
+    "ext-sodium": "*",
     "2tvenom/cborencode": "^1.0",
     "bitwasp/bech32": "^0.0.1"
   },
