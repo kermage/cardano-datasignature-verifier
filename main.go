@@ -9,7 +9,7 @@ import (
 	"github.com/dop251/goja_nodejs/require"
 )
 
-//go:embed packages/js/dist/index.js
+//go:embed js/dist/index.js
 var indexJS string
 
 func main() {
