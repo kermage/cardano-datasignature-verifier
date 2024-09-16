@@ -6,6 +6,7 @@
 
 namespace CardanoDataSignature;
 
+use CardanoDataSignature\Addresses\EnterpriseAddress;
 use CardanoDataSignature\Addresses\RewardAddress;
 use CardanoDataSignature\Addresses\ShelleyAddress;
 use CardanoDataSignature\Utilities\Credential;
@@ -115,14 +116,23 @@ class Verifier
 		);
 
 		if (0 === strpos($providedAddress, 'addr')) {
-			$decodedAddress = new ShelleyAddress(
-				$network,
-				$credential,
-				new Credential(
-					HashType::Address,
-					substr($hexAddress, 2+56)
-				),
-			);
+			$stakeCredentialHash = substr($hexAddress, 2+56);
+
+			if ($stakeCredentialHash) {
+				$decodedAddress = new ShelleyAddress(
+					$network,
+					$credential,
+					new Credential(
+						HashType::Address,
+						substr($hexAddress, 2+56)
+					),
+				);
+			} else {
+				$decodedAddress = new EnterpriseAddress(
+					$network,
+					$credential
+				);
+			}
 		} elseif (0 === strpos($providedAddress, 'stake')) {
 			$decodedAddress = new RewardAddress(
 				$network,
