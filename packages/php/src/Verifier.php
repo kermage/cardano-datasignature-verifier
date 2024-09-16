@@ -6,6 +6,11 @@
 
 namespace CardanoDataSignature;
 
+use CardanoDataSignature\Addresses\RewardAddress;
+use CardanoDataSignature\Addresses\ShelleyAddress;
+use CardanoDataSignature\Utilities\Credential;
+use CardanoDataSignature\Utilities\HashType;
+use CardanoDataSignature\Utilities\Network;
 use CBOR\CBOREncoder;
 use CBOR\Types\CBORByteString;
 
@@ -29,7 +34,7 @@ class Verifier
 			return false;
 		}
 
-		return $verifier->correctCBOR($message);
+		return $verifier->correctCBOR($message, $address);
 
 	}
 
@@ -65,7 +70,7 @@ class Verifier
 		return true;
 	}
 
-	protected function correctCBOR(string $message): bool
+	protected function correctCBOR(string $message, string $providedAddress): bool
 	{
 		$cborSignature = hex2bin($this->signature);
 		$signatureData = CBOREncoder::decode($cborSignature);
@@ -97,8 +102,35 @@ class Verifier
 		$protectedAddress = $decodedProtectedHeader['address']->get_byte_string();
 		$publicKey = $keyData[-2]->get_byte_string();
 		$credentialHash = sodium_crypto_generichash($publicKey, '', 28);
+		$hexAddress = bin2hex($protectedAddress);
 
-		if (false === strpos(bin2hex($protectedAddress), bin2hex($credentialHash))) {
+		if (false === strpos($hexAddress, bin2hex($credentialHash))) {
+			return false;
+		}
+
+		$network = false === strpos($providedAddress, 'test') ? Network::Mainnet : Network::Testnet;
+		$credential = new Credential(
+			HashType::Address,
+			substr($hexAddress, 2, 56)
+		);
+
+		if (0 === strpos($providedAddress, 'addr')) {
+			$decodedAddress = new ShelleyAddress(
+				$network,
+				$credential,
+				new Credential(
+					HashType::Address,
+					substr($hexAddress, 2+56)
+				),
+			);
+		} elseif (0 === strpos($providedAddress, 'stake')) {
+			$decodedAddress = new RewardAddress(
+				$network,
+				$credential
+			);
+		}
+
+		if ($decodedAddress->getBech32() !== $providedAddress) {
 			return false;
 		}
 
